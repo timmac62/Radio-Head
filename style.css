@@ -1,0 +1,225 @@
+body {
+    background-color: black;
+    width: 1200px;
+    font-family: Arial, Verdana, sans-serif;
+    color: #665544;
+}
+.container {
+    /* width: 100%; */
+    margin: 10px auto;
+}
+.center {
+    color: white;
+    text-align: center;
+    font-size: 300%;
+}
+.ui-widget-header {
+    background: none;
+    border: none;
+}
+#tabs {
+    border: none;
+    width: 100%;
+}
+.ui-tabs .ui-tabs-panel {
+    border: 2px solid lightseagreen;
+    border-radius: 10px;
+    padding: 5% 10%;
+}
+.ui-state-default, .ui-widget-content .ui-state-default, .ui-widget-header .ui-state-default, .ui-button, html .ui-button.ui-state-disabled:hover, html .ui-button.ui-state-disabled:active {
+    background: steelblue;
+    border: none;
+}
+.ui-state-active, .ui-widget-content .ui-state-active, .ui-widget-header .ui-state-active, a.ui-button:active, .ui-button:active, .ui-button.ui-state-active:hover
+{
+    background: lightseagreen;
+}
+.ui-state-default a, .ui-state-default a:link, .ui-state-default a:visited, a.ui-button, a:link.ui-button, a:visited.ui-button, .ui-button
+{
+    color: white;
+}
+.slider {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+input {
+    border: 0;
+    color: lightseagreen;
+    font-weight:bold;
+}
+#tabTitle {
+    text-align: center;
+    color: steelblue;
+}
+#settingsTitle {
+    text-align: center;
+    margin-top: 0px;
+    color: lightseagreen;
+}
+.column1of2, .column2of2 {
+	width: 400px;
+	float: left;
+	margin: 10px;
+    border: 2px solid lightseagreen;
+    border-radius: 10px;
+    padding: 2% 2%;
+}
+li#selectConfigFile, #setDefaults, #saveConfigFile{
+  background-color: steelblue;
+  color: #fff;
+  border-top: 1px solid blue;
+  border-bottom: 1px solid lightseagreen;
+  font-size: 20px;
+  letter-spacing: .05em;
+  list-style-type: none;
+  text-shadow: 2px 2px 1px black;
+  text-align: center;
+  height: 50px;
+  padding-left: 1em;
+  padding-top: 10px;
+  border-radius: 10px;
+  margin: 10px;
+}
+li#setDefaults.cool {
+  background-color: #6cc0ac;
+  color: #fff;
+  text-shadow: 2px 2px 1px #3b6a5e;
+  border-top: 1px solid #7ee0c9;
+  border-bottom: 1px solid #3b6a5e;
+}
+/*
+form {
+  display: grid;
+  place-content: center;
+  min-height: 100vh;
+}
+
+.form-control {
+  font-family: system-ui, sans-serif;
+  font-size: 2rem;
+  font-weight: bold;
+  line-height: 1.1;
+  display: grid;
+  grid-template-columns: 1em auto;
+  gap: 0.5em;
+}
+
+.form-control + .form-control {
+  margin-top: 1em;
+}
+
+.form-control--disabled {
+  color: var(--form-control-disabled);
+  cursor: not-allowed;
+} */
+
+input[type="checkbox"] {
+  /* Add if not using autoprefixer */
+  -webkit-appearance: none;
+  /* Remove most all native input styles */
+  appearance: none;
+  /* For iOS < 15 */
+  background-color: var(--form-background);
+  /* Not removed via appearance */
+  margin: 0;
+
+  font: inherit;
+  color: currentColor;
+  width: 1.15em;
+  height: 1.15em;
+  border: 0.15em solid currentColor;
+  border-radius: 0.15em;
+  transform: translateY(-0.075em);
+
+  display: grid;
+  place-content: center;
+}
+
+input[type="checkbox"]::before {
+  content: "";
+  width: 0.65em;
+  height: 0.65em;
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  transform: scale(0);
+  transform-origin: bottom left;
+  transition: 120ms transform ease-in-out;
+  box-shadow: inset 1em 1em var(--form-control-color);
+  /* Windows High Contrast Mode */
+  background-color: CanvasText;
+}
+
+input[type="checkbox"]:checked::before {
+  transform: scale(1);
+}
+
+input[type="checkbox"]:focus {
+  outline: max(2px, 0.15em) solid currentColor;
+  outline-offset: max(2px, 0.15em);
+}
+
+input[type="checkbox"]:disabled {
+  --form-control-color: var(--form-control-disabled);
+  color: var(--form-control-disabled);
+  cursor: not-allowed;
+}
+
+#page {
+  background-color: #403c3b;
+  margin: 0 auto 0 auto;
+  position: relative;
+  text-align: center;}
+  /* Responsive page rules at bottom of style sheet */
+
+#table {
+    display: flex;
+    justify-content: center;
+    margin-top: 3rem;
+}
+table {
+    font-family: 'Open Sans', sans-serif;
+    border-collapse: collapse;
+    color: black;
+}
+thead {
+    background-color: lightblue;
+    font-weight: bold;
+    border-bottom: 2px solid white;
+ }
+th, td {
+    padding: 0.5rem;
+    padding-left: 3rem;
+    padding-right: 3rem;
+    text-align: center;
+}
+
+tbody tr td {
+    padding: 0.5rem;
+    padding-left: 0.8rem;
+    padding-right: 0.8rem;
+}
+/* Even row styling */
+tbody tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+/* Odd row styling */
+tbody tr:nth-child(odd) {
+    background-color: white;
+}
+/* Left column styling */
+.col-left {
+    background-color: lightblue;
+    color: black;
+    font-weight: 400;
+    border-top: 2px solid white;
+    border-bottom: 2px solid white;
+}
+tfoot {
+    background-color: rgb(206, 231, 240);
+    font-size: 0.7rem;
+    padding: 0.1rem;
+    border-top: 2px solid white;
+}
+tfoot tr td {
+    padding: 0.2rem;
+    text-align: right;
+}

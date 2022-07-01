@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Radio Head</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <!-- <script src="jquery-3.6.0.min.js"></script> -->
+        <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
+        <!-- <link rel="stylesheet" href="jquery-ui.css"> -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+        <!-- <script src="jquery-ui.min.js"></script> -->
+        <link rel="stylesheet" href="style.css">
+        <script src="radioHead.js"></script>
+    </head>
+    <body>
+        <p class="center">Radio Head Configuration Tool</p>
+        <div class="container">
+            <div id="tabs">
+                <ul>
+                <li><a href="#tabs-1">Setup</a></li>
+                <li><a href="#tabs-2">Basic Settings</a></li>
+                <li><a href="#tabs-3">DAB Stations</a></li>
+                <li><a href="#tabs-4">AD_FMR_Config</a></li>
+                </ul>
+                <div id="tabs-1">
+                    <h1 id="tabTitle">Setup</h1>
+                    <div class="column1of2">
+                        <h3 id="settingsTitle">Configuration</h3>
+                        <!-- <input type="file" id="file-selector" accept=".cfg"> -->
+                        <li id="selectConfigFile">Choose Configuration File</li>
+                        <li id="setDefaults">Set Factory Defaults</li>
+                        <li id="saveConfigFile">Save Configuration to File</li>
+                    </div>
+                </div>
+                <div id="tabs-2">
+                    <h1 id="tabTitle">Basic Settings</h1>
+                    <div class="column1of2">
+                        <h3 id="settingsTitle">Sound</h3>
+                        <div>
+                            <label for="treble">Treble:</label>
+                            <input id="treble" name="treble""/>
+                        </div>
+                        <div class="slider" id="slider-treble" title="Adjust from -15dB to +15dB"></div>
+
+                        <div>
+                            <label for="mid">Mid:</label>
+                            <input id="mid" name="mid""/>
+                        </div>
+                        <div class="slider" id="slider-mid" title="Adjust from -15dB to +15dB"></div>
+
+                        <div>
+                            <label for="bass">Bass:</label>
+                            <input id="bass" name="bass""/>
+                        </div>
+                        <div class="slider" id="slider-bass" title="Adjust from -15dB to +15dB"></div>
+
+                        <div>
+                            <label for="loudness">Loudness:</label>
+                            <input id="loudness" name="loudness""/>
+                        </div>
+                        <div class="slider" id="slider-loudness" title="Adjust from 0dB to +15dB"></div>
+
+                        <div>
+                            <label for="subwoofer">Subwoofer:</label>
+                            <input id="subwoofer" name="subwoofer""/>
+                        </div>
+                        <div class="slider" id="slider-subwoofer" title="Adjust from -15dB to +15dB"></div>
+
+                        <div>
+                        <label for="xfr">Select XFR: </label>
+                        <select name="xfr" id="xfr">
+                          <option>55 Hz</option>
+                          <option selected="selected">85 Hz</option>
+                          <option>120 Hz</option>
+                          <option>160 Hz</option>
+                        </select>
+                        </div>
+                    </div>
+                    <div class="column2of2">
+                        <h3 id="settingsTitle" style="margin-top: 0;">Volume</h3>
+                        <div style="margin-top:40px;">
+                            <label for="autoVol">Auto Volume:</label>
+                            <input id="autoVol" name="autoVol""/>
+                        </div>
+                        <div class="slider" id="slider-autoVol" title="Adjust from -15dB to +15dB"></div>
+                        <fieldset style="margin-top:40px;">
+                          <legend>Auto Volume Enable: </legend>
+                          <label for="ave-enabled">Enabled</label>
+                          <input type="radio" name="ave" id="ave-enabled" checked="checked">
+                          <label for="ave-disabled">Disabled</label>
+                          <input type="radio" name="ave" id="ave-disabled">
+                        </fieldset>
+                        <fieldset style="margin-top:40px;">
+                          <legend>Equalizer: </legend>
+                          <label for="eq-off">Off</label>
+                          <input type="radio" name="eq" id="eq-off">
+                          <label for="eq-loudness">Loudness</label>
+                          <input type="radio" name="eq" id="eq-loudness">
+                          <label for="eq-EQ">EQ</label>
+                          <input type="radio" name="eq" id="eq-EQ" checked="checked">
+                        </fieldset>
+                    </div>
+                    <div class="column1of2" style="clear: left;">
+                        <h3 id="settingsTitle">Balance/Fader/Tone</h3>
+                        <div>
+                            <label for="balance">Balance:</label>
+                            <input id="balance" name="balance""/>
+                        </div>
+                        <div class="slider" id="slider-balance" title="Adjust from -15dB to +15dB"></div>
+
+                        <div>
+                            <label for="fader">Fader:</label>
+                            <input id="fader" name="fader""/>
+                        </div>
+                        <div class="slider" id="slider-fader" title="Adjust from -15dB to +15dB"></div>
+
+                        <div>
+                            <label for="tone">Tone:</label>
+                            <input id="tone" name="tone""/>
+                        </div>
+                        <div class="slider" id="slider-tone" title="Adjust from -15dB to +15dB"></div>
+                    </div>
+                    <div class="column2of2">
+                        <h3 id="settingsTitle">Tube Emulation/HDFM/HDAM</h3>
+                        <fieldset>
+                          <legend>Tube Emulation: </legend>
+                          <label for="tubeEmulation">Enabled</label>
+                          <input type="radio" name="tubeEm" id="tubeEmulation" checked="checked">
+                          <label for="tubeSound">Sound</label>
+                          <input type="radio" name="tubeEm" id="tubeSound">
+                        </fieldset>
+                        <fieldset style="margin-top:10px;"">
+                          <legend>HDFM: </legend>
+                              <label for="hdFM-enabled">Enabled</label>
+                              <input type="radio" name="hdFM" id="hdFM-enabled" checked="checked">
+                              <label for="hdFM-disabled">Disabled</label>
+                              <input type="radio" name="hdFM" id="hdFM-disabled">
+                        </fieldset>
+                        <fieldset style="margin-top:10px;"">
+                          <legend>HDAM: </legend>
+                              <label for="hdAM-enabled">Enabled</label>
+                              <input type="radio" name="hdAM" id="hdAM-enabled" checked="checked">
+                              <label for="hdAM-disabled">Disabled</label>
+                              <input type="radio" name="hdAM" id="hdAM-disabled">
+                        </fieldset>
+
+                        <!-- <fieldset style="margin-top:40px;">
+                          <legend>Auto Volume Enable: </legend>
+                          <label for="ave-enabled">Enabled</label>
+                          <input type="radio" name="ave" id="ave-enabled" checked="checked">
+                          <label for="ave-disabled">Disabled</label>
+                          <input type="radio" name="ave" id="ave-disabled">
+                        </fieldset> -->
+
+                    </div>
+                </div>
+                <div id="tabs-3">
+                    <h1 id="tabTitle">DAB Stations</h1>
+                    <h3 id="settingsTitle">DAB Stations</h3>
+                </div>
+                <div id="tabs-4">
+                    <h3 id="settingsTitle">config data</h3>
+                    <div id="configTableContainer"> </div>
+                </div>
+            </div>
+        </div>
+  </body>
+</html>

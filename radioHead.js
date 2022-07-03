@@ -74,6 +74,10 @@ $(function() {
     var hdFM                                = defaultHDFM;
     var hdAM                                = defaultHDAM;
     //
+    // File I/O
+    //
+    var cfgFileName;
+    //
     // config data cell tooltips - very nice touch for development
     //
     // NOTE:    BE VERY PARTICULAR WITH THE STRUCTURE - MODIFY AND/OR
@@ -246,21 +250,48 @@ $(function() {
         $("#tabs").tabs();
     });
     $( "input[type='radio']" ).checkboxradio();
-    // $( "#ave-enabled" ).checkboxradio({
-    //     classes: {
-    //         "ui-checkboxradio": "highlight"
-    //     }
-    // });
     //
     // Setup
     // Configuration File
     //
-    // function SelectRadioButton(name, value) {
-    //   $("input[name='"+name+"'][value='"+value+"']").prop('checked', true);
-    //   return false; // Returning false would not submit the form
-    // }
+    function readFile(input) {
+        var file, fr;
+        //
+        // read the file
+        //
+        file = input.files[0];
+        fr = new FileReader();
+        fr.onload = receivedBinary;
+        fr.readAsBinaryString(file);
+        //
+        // save the filename sans the extension
+        //
+        var fullPath = document.getElementById('read-file').value;
+        if (fullPath) {
+            var startIndex = (fullPath.indexOf('\\') >= 0 ? fullPath.lastIndexOf('\\') : fullPath.lastIndexOf('/'));
+            cfgFileName = fullPath.substring(startIndex);
+            if (cfgFileName.indexOf('\\') === 0 || cfgFileName.indexOf('/') === 0) {
+                cfgFileName = cfgFileName.substring(1);
+            }
+            //
+            // remove the extension
+            //
+            cfgFileName = cfgFileName.substring(0, cfgFileName.lastIndexOf('.')) || cfgFileName;
+        }
+        function receivedBinary() {
+            var result, n;
+            result = fr.result;
+            for (n = 0; n < result.length; ++n) {
+                ad_fmr_config[n] = result.charCodeAt(n);
+            }
+        }
+    }
+    const fileSelector = document.getElementById('read-file');
+    fileSelector.addEventListener('change', (event) => {
+        readFile(event.target);
+    });
     $('li#selectConfigFile').on('click', function() {
-$(this).fadeTo("slow", 0.8);
+        $(this).fadeTo("slow", 0.8);
     });
     //
     // Set Defaults
@@ -274,20 +305,23 @@ $(this).fadeTo("slow", 0.8);
     // Save Settings to Config File
     //
     $('li#saveConfigFile').on('click', function() {
-$(this).fadeTo("slow", 0.8);
+        $(this).fadeTo("slow", 0.8);
+        var saveByteArray = (function () {
+            var a = document.createElement("a");
+            document.body.appendChild(a);
+            a.style = "display: none";
+            return function (data, name) {
+                var blob = new Blob(data, {type: "octet/stream"}),
+                    url = window.URL.createObjectURL(blob);
+                a.href = url;
+                a.download = name;
+                a.click();
+                window.URL.revokeObjectURL(url);
+            };
+        }());
+        saveByteArray([ad_fmr_config], cfgFileName + ".set");
+        // console.log("save file name: " + cfgFileName );
     });
-    // const fileSelector = document.getElementById('file-selector');
-    // fileSelector.addEventListener('change', (event) => {
-    //     const fileList = event.target.files;
-    //     console.log(fileList);
-    // });
-    // $( function() {
-    //     $( "button, input, a" ).click( function( event ) {
-    //         event.preventDefault();
-    //         console.log("button press");
-    //         console.log(event);
-    //     } );
-    // } );
     //*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*
     //
     // UI Element Section
@@ -526,7 +560,7 @@ $(this).fadeTo("slow", 0.8);
     //
     //*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*
     //
-    // Setters - also update ad_fmr_config
+    // Setters - update ui element to new value and also ad_fmr_config
     //
     function setTreble(newValue) {
         treble = newValue;
@@ -700,11 +734,6 @@ $(this).fadeTo("slow", 0.8);
         }
         ad_fmr_config[offset] = previousValue;
     }
-    function dumpConfig(){
-        for(var i = 0; i < ad_fmr_config.length; i++) {
-            console.log(ad_fmr_config[i]);
-        }
-    }
     //
     // update all UI elements
     //
@@ -794,7 +823,6 @@ $(this).fadeTo("slow", 0.8);
             $( "#hdAM-enabled" ).prop( "checked", true ).checkboxradio('refresh');
             $( "#hdAM-disabled" ).prop( "checked", false ).checkboxradio('refresh');;
         }
-
     }
     //
     // revert to factory defaults
@@ -823,98 +851,113 @@ $(this).fadeTo("slow", 0.8);
     /* Defining the tableCreate function */
     function tableCreate(rows, cols, data, thead, tfoot) {
         // 1) Create table and body elements
-        let table = document.createElement('table')
+        let table = document.createElement('table');
         // let table = $('#configTableContainer');
-        let tableBody = document.createElement('tbody')
+        let tableBody = document.createElement('tbody');
 
         // 2) Optional header
-        let headContent = document.createElement('thead')
-        let tr = document.createElement('tr')
+        let headContent = document.createElement('thead');
+        let tr = document.createElement('tr');
 
         // 2.1) Sets default behavior: Single cell header
         if (thead && Array.isArray(thead) == false) {
-            let td = document.createElement('td')
-            td.innerHTML = thead // Set header text to argument input
-            td.setAttribute('colspan', cols) // Span header for as many cols as table
-            tr.append(td)
-            headContent.append(tr) // append head row to thead element
-            thead = headContent // Make this final value of thead
+            let td = document.createElement('td');
+            td.innerHTML = thead; // Set header text to argument input
+            td.setAttribute('colspan', cols); // Span header for as many cols as table
+            tr.append(td);
+            headContent.append(tr); // append head row to thead element
+            thead = headContent; // Make this final value of thead
         }
         // 2.2) If "split" is third argument: Creates a multi-cell header
         if (Array.isArray(thead)) {
-            let i
+            let i;
             for (i = 0; i < cols; i++) {
-                let td = document.createElement('td')
-                td.id = 'thead' + i
-                td.innerHTML = thead[i]
-                tr.append(td) // append multiple td to head row
+                let td = document.createElement('td');
+                td.id = 'thead' + i;
+                td.innerHTML = thead[i];
+                tr.append(td); // append multiple td to head row
             }
-            headContent.append(tr) // append head row to thead element
-            thead = headContent // Make this final value of thead
+            headContent.append(tr); // append head row to thead element
+            thead = headContent; // Make this final value of thead
         }
         // 3) Optional footer (text is user input string)
         if (tfoot) {
-            footElement = document.createElement('tfoot')
-            tr = document.createElement('tr')
-            td = document.createElement('td')
-            td.innerHTML = tfoot // Set text to fourth argument input
-            td.setAttribute('colspan', cols)
+            footElement = document.createElement('tfoot');
+            tr = document.createElement('tr');
+            td = document.createElement('td');
+            td.innerHTML = tfoot; // Set text to fourth argument input
+            td.setAttribute('colspan', cols);
             tr.append(td) // Append single cell to row
-            footElement.append(tr) // Append row to tfoot element
-            tfoot = footElement // Make this final value of tfoot
+            footElement.append(tr); // Append row to tfoot element
+            tfoot = footElement; // Make this final value of tfoot
         }
         // 4) Create table body rows and cell with loops
-        let i
+        let i;
+        // var result, n, aByte, byteStr;
         for (i = 0; i < rows; i++) {
+            //
             // Loop to create row
-            let tr = document.createElement('tr')
-            let id = i * cols // Nested loop to append cells to rows (first loop id = 0*5; second loop id = 1*5, etc)
+            //
+            let tr = document.createElement('tr');
+            let id = i * cols;
+            //
+            // Nested loop to append cells to rows (first loop id = 0*5;
+            // second loop id = 1*5, etc)
+            //
             for (j = 0; j < cols; j++) {
-                let td = document.createElement('td')
+                let td = document.createElement('td');
                 id++ // increase id by 1 (first loop is 0+1 = 1)
                 if (id == i * cols + 1) {
-                    td.classList.add('left-col')
+                    td.classList.add('left-col');
                  }
-                 td.innerHTML = id // print id in col cell
-                 td.setAttribute('id', 'cell' + id) // set id of element to id
-td.setAttribute('title', cellToolTips[id-1]);
-                 tr.append(td) // append col cell to table row
+                 //
+                 // print id in col cell & set id of element to id
+                 //
+                 td.innerHTML = id;
+                 td.setAttribute('id', 'cell' + id);
+                 //
+                 // set the tooltip and append the col cell to the table row
+                 //
+                 td.setAttribute('title', cellToolTips[id-1]);
+                 tr.append(td);
                  // Repeats until j < column numbers entered by user
 
                  if (data) {
-                   td.innerHTML = data[id - 1].toString(16);
+                     var byteStr;
+                     byteStr = data[id - 1].toString(16);
+                     if (byteStr.length < 2) {
+                          byteStr = "0" + byteStr;
+                     }
+                     td.innerHTML = byteStr;
                  }
              }
-             tableBody.append(tr)
+             tableBody.append(tr);
         }
 
         // 5) Append head, body and footer
         if (thead) {
-            table.append(thead)
+            table.append(thead);
         }
-        table.append(tableBody)
+        table.append(tableBody);
         if (tfoot) {
-            table.append(tfoot)
+            table.append(tfoot);
         }
-
-        // Show table in console
-        console.log(table)
-
-        return table
+        // console.log(table);
+        return table;
     }
     updateUIElements();
     //
     // set appropriate tab heightStyle and refresh
     //
     $( "#tabs" ).tabs({heightStyle: "fill"});
-    // $( "#tabs" ).tabs({ active: 0 }); // Make Setup tab active
-    $( "#tabs" ).tabs({ active: 1 }); // Make Basic Settings tab active for development
+    $( "#tabs" ).tabs({ active: 0 }); // Make Setup tab active
+    // $( "#tabs" ).tabs({ active: 1 }); // Make Basic Settings tab active for development
     $( "#tabs" ).tabs('refresh');
 
     $('#tabs').tabs({
         activate: function (event, ui) {
             var $activeTab = $('#tabs').tabs('option', 'active');
-            console.log("Tab #"+ $activeTab);
+            // console.log("Tab #"+ $activeTab);
             if ($activeTab == 0) {
                 $('li#selectConfigFile').fadeTo("slow", 1);
                 $('li#setDefaults').fadeTo("slow", 1);
@@ -922,8 +965,7 @@ td.setAttribute('title', cellToolTips[id-1]);
             }
             if ($activeTab == 3) {
                 const headings = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-                var cfgTable = tableCreate(10, 10, ad_fmr_config,headings, 'Aurora Design Kicks ASS!');
-                // $('#configTableContainer').appendChild(cfgTable);
+                var cfgTable = tableCreate(10, 10, ad_fmr_config, headings, 'Aurora Design Kicks ASS!');
                 document.querySelector('#configTableContainer').innerHTML = '';
                 document.querySelector('#configTableContainer').appendChild(cfgTable);
             }

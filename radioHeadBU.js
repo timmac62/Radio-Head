@@ -1,15 +1,7 @@
 $(function() {
     //
-    // radioHead.js
-    //
-    // To Do:
-    //          ✓ (1) static jquery libraries
-    //          (2) create GitHub branch and merge this new version
-    //          (3) html and css look and feel - basic settings
-    //
     // Common defines that make readability easier
     //
-    const LOGGER                            = true;
     const CLEAR_BIT                         = 0;
     const SET_BIT                           = 1;
     const ENABLED                           = 0;
@@ -27,11 +19,6 @@ $(function() {
     const TAB_BASIC_SETTINGS                = 1;
     const TAB_DAB_SETTINGS                  = 2;
     const TAB_CONFIG_DATA                   = 3;
-    const DAB_ACTIVE                        = 1;
-    const DAB_NOT_ACTIVE                    = 0;
-    const DAB_MAXIMUM_STATIONS              = 160;
-    const DAB_MAXIMUM_ACTIVE_STATIONS       = 50;
-    const DAB_MAXIMUM_ENSEMBLES             = 43;
     //
     // Application Defaults
     //
@@ -56,23 +43,21 @@ $(function() {
     const defaultHDAM                       = enablers[ENABLED];
     //
     // config data - all values occupy 1 byte unless denoted otherwise
-    // set the default size without any DAB information
     //
-    var ad_fmr_config                       = [];
-    const CONFIG_BUFFER_SIZE                = 40;
+    const CONFIG_BUFFER_SIZE = 100;
+    var ad_fmr_config = new Uint8Array(CONFIG_BUFFER_SIZE);
     const CONFIG_OC_MAJOR_VERSION           = 0;
-    const CONFIG_OC_MINOR_VERSION           = CONFIG_OC_MAJOR_VERSION + 1;
-    const CONFIG_FILE_LENGTH                = CONFIG_OC_MINOR_VERSION + 1;
-    const CONFIG_CALL_RESPONSE_LINK_VERSION = CONFIG_FILE_LENGTH + 1;
-    const CONFIG_SERIAL_NUMBER              = CONFIG_CALL_RESPONSE_LINK_VERSION + 1;
-    const CONFIG_FMR_HARDWARE_VERSION       = CONFIG_SERIAL_NUMBER + 10;
-    const CONFIG_FMR_FIRMWARE_VERSION       = CONFIG_FMR_HARDWARE_VERSION + 1;
-    const CONFIG_SETUP_SPEECH_ROM_VERSION   = CONFIG_FMR_FIRMWARE_VERSION + 1;
-    const CONFIG_SETUP_TABLE                = CONFIG_SETUP_SPEECH_ROM_VERSION + 1;
-    const CONFIG_USER_SETTINGS              = CONFIG_SETUP_TABLE + 12;
-    const CONFIG_DAB_SCAN_INDEX             = CONFIG_USER_SETTINGS + 10;
-    const CONFIG_DAB_CHANNELS               = CONFIG_DAB_SCAN_INDEX + 1;
-    const CONFIG_CHECKSUM                   = CONFIG_DAB_CHANNELS + 80;
+    const CONFIG_OC_MINOR_VERSION           = 1;
+    const CONFIG_CALL_RESPONSE_LINK_VERSION = 2;
+    const CONFIG_SERIAL_NUMBER              = 3;    // 10 bytes
+    const CONFIG_FMR_HARDWARE_VERSION       = 13;
+    const CONFIG_FMR_FIRMWARE_VERSION       = 14;
+    const CONFIG_SETUP_SPEECH_ROM_VERSION   = 15;
+    const CONFIG_SETUP_TABLE                = 16;
+    const CONFIG_USER_SETTINGS              = 28;
+    const CONFIG_DAB_SCAN_INDEX             = 38;
+    const CONFIG_DAB_CHANNELS               = 39;   // 80 bytes
+    const CONFIG_CHECKSUM                   = 119;
     const PROGRAM_ERROR = "Something is WRONG in the state of Denmark!";
     //
     // ui variables for all settings
@@ -93,28 +78,14 @@ $(function() {
     var hdFM                                = defaultHDFM;
     var hdAM                                = defaultHDAM;
     //
-    // misc: config, frequencies and tool tips
+    // File I/O
     //
     var cfgFileName;
-    let ensembleFrequencies = [
-        '5A', '5B', '5C', '5D',
-        '6A', '6B', '6C', '6D',
-        '7A', '7B', '7C', '7D',
-        '8A', '8B', '8C', '8D',
-        '9A', '9B', '9C', '9D',
-        '10A', '10N', '10B', '10C', '10D',
-        '11A', '11N', '11B', '11C', '11D',
-        '12A', '12N', '12B', '12C', '12D',
-        '13A', '13B', '13C', '13D', '13E',
-        '13F'
-    ];
     //
     // config data cell tooltips - very nice touch for development
     //
     // NOTE:    BE VERY PARTICULAR WITH THE STRUCTURE - MODIFY AND/OR
     //          ADD A TOOL TIP AND TEST RIGHT AWAY!!!
-    //
-    //          it NEEDS to match the offsets for ad_fmr_config defined above
     //
     var cellToolTips = [
         "option card major version\x0A\x0A"
@@ -123,7 +94,6 @@ $(function() {
             + "b3-0: hardware version",
         "option card minor version\x0A\x0A"
             + "b7-0: minor version",
-        "configuration file length\x0A\x0A",
         "calling resp code / linkVer\x0A\x0A"
             + "b7-4: 0x0 get base, 0x01 get_dab_ids, 0x2 get_live\x0A"
             + "b3-0: link version (currently 0)",
@@ -261,17 +231,38 @@ $(function() {
     // initial setup - ensure we start with Factory Defaults
     //
     function setup() {
-        //
-        // initialize config array and length
-        //
-        ad_fmr_config = new Uint8Array(CONFIG_BUFFER_SIZE);
-        ad_fmr_config[CONFIG_FILE_LENGTH] = CONFIG_BUFFER_SIZE;
-        //
-        // and set the factory defaults
-        //
         setFactoryDefaults();
     }
     document.addEventListener("DOMContentLoaded", setup());
+    //
+    // Key Handlers for development/testing
+    //
+    document.addEventListener("keydown", function(event) {
+        if (event.defaultPrevented) {
+            return;
+        }
+        if (event.code === "ArrowDown"){
+            // clear configuration array on "down" key press
+            ad_fmr_config.fill(0x00, 0, ad_fmr_config.length);
+console.log('down arrow');
+var ct = document.getElementById('#config_table');
+ct.remove();
+
+        }
+        if (event.code === "ArrowUp"){
+            // set configuration array on "up" key press
+            ad_fmr_config.fill(0xff, 0, ad_fmr_config.length);
+        }
+        if (event.code === "ArrowLeft"){
+            // // "left" key press
+            ad_fmr_config.fill(0x55, 0, ad_fmr_config.length);
+
+        }
+        if (event.code === "ArrowRight"){
+            // "right" key press
+            ad_fmr_config.fill(0xaa, 0, ad_fmr_config.length);
+        }
+    }, true);
     //
     // jQueryUI initializations - tabs, checkboxradio
     //
@@ -280,30 +271,8 @@ $(function() {
     });
     $( "input[type='radio']" ).checkboxradio();
     //
-    // Key Handlers for development/testing
-    //
-    document.onkeydown = keydown;
-    function keydown(evt){
-      if (!evt) evt = event;
-      //
-      // Ctrl Alt A?
-      //
-      if (evt.ctrlKey && evt.altKey && evt.keyCode==65){
-        alert("CTRL+ALT+A");
-        //
-        // toggle config tab
-        //
-        // var toggleTab =  $( "#tabs-4" ).tabs( "option", "hide" );
-        // console.assert(LOGGER, 'toggleTab ' + toggleTab);
-        // if (toggleTab === true) {
-        //     $( "#tabs-4" ).tabs( "option", "show", { effect: "blind", duration: 1000 } );
-        // } else {
-        //     $( "#tabs-4" ).tabs( "option", "hide", { effect: "explode", duration: 1000 } );
-        // }
-      }
-    }
-    //
-    // Setup Configuration File
+    // Setup
+    // Configuration File
     //
     function readFile(input) {
         var file, fr;
@@ -323,6 +292,11 @@ $(function() {
             cfgFileName = fullPath.substring(startIndex);
             if (cfgFileName.indexOf('\\') === 0 || cfgFileName.indexOf('/') === 0) {
                 cfgFileName = cfgFileName.substring(1);
+                //
+                // clear out previous configuration array
+                //
+console.log("ad_fmr_config all zeroes");
+ad_fmr_config.fill(0x00, 0, ad_fmr_config.length);
             }
             //
             // remove the extension
@@ -332,25 +306,17 @@ $(function() {
         function receivedBinary() {
             var result, n;
             result = fr.result;
-            //
-            // allocate new buffer and rely on garbage collector to do its job
-            //
-            new_length = result.length;
-            ad_fmr_config = new Uint8Array(result.length);
-            //
-            // copy over existing array
-            //
             for (n = 0; n < result.length; ++n) {
                 ad_fmr_config[n] = result.charCodeAt(n);
             }
         }
     }
-    //
-    // select configuration file
-    //
     const fileSelector = document.getElementById('read-file');
     fileSelector.addEventListener('change', (event) => {
         readFile(event.target);
+    });
+    $('li#selectConfigFile').on('click', function() {
+        $(this).fadeTo("slow", 0.8);
     });
     //
     // Set Defaults
@@ -379,7 +345,7 @@ $(function() {
             };
         }());
         saveByteArray([ad_fmr_config], cfgFileName + ".set");
-        console.assert(LOGGER, "save file name: " + cfgFileName );
+        // console.log("save file name: " + cfgFileName );
     });
     //*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*
     //
@@ -685,7 +651,7 @@ $(function() {
             updateConfigBit(CONFIG_USER_SETTINGS, 2, CLEAR_BIT);
 
         } else {
-            console.error(PROGRAM_ERROR + " in setAutoVolumeEnable");
+            console.log(PROGRAM_ERROR + " in setAutoVolumeEnable");
         }
     }
     function setEqualizer(newValue) {
@@ -712,7 +678,7 @@ $(function() {
             updateConfigBit(CONFIG_USER_SETTINGS, 0, CLEAR_BIT);
             updateConfigBit(CONFIG_USER_SETTINGS, 1, CLEAR_BIT);
         } else {
-            console.error(PROGRAM_ERROR + " in setEqualizer");
+            console.log(PROGRAM_ERROR + " in setEqualizer");
         }
     }
     function setBalance(newValue) {
@@ -793,22 +759,17 @@ $(function() {
         }
         ad_fmr_config[offset] = previousValue;
     }
-    //
-    // test if b0 - b7 is set in value
-    //
     function isBitSet(value, bit) {
-        return (value & (1 << bit));
+        var result = 0;
+        if ((value & (1 << bit)))
+            result = 1;
+        return result;
     }
-    function setBit(val, bit)
-    {
-        let newVal = val &= ~(1<<bit);
-        newVal |= (1<<bit);
-        return newVal;
+    function setBit(value, bitToSet) {
+        return (value |= (1 << bitToSet));
     }
-    function clrBit(val, bit)
-    {
-        let newVal = val &= ~(1<<bit);
-        return newVal;
+    function clearBit(value, bitToClear) {
+        return (value &= ~(1 << bitToClear));
     }
     //
     // update all UI elements
@@ -924,254 +885,249 @@ $(function() {
         setHDFM(defaultHDFM);
         setHDAM(defaultHDAM);
     }
-    $('#dabSettingsContainer').on('click', function() {
-        var boxes = $(":checkbox:checked");
-        if (boxes.length > DAB_MAXIMUM_ACTIVE_STATIONS) {
-        // if (boxes.length > 3) {
-            //
-            // alert user and uncheck the last box that the user tried to set
-            // active
-            //
-            alert("You have exceeded the maximum allowable active stations");
-            boxes[boxes.length-1].checked = false;
-        }
-    });
     //
-    // this function is executed when the user clicks on the Submit button
-    // in the DAB Settings tab
+    // create the content of our DAB Settings tab based on the content of
+    // the currently loaded config file
     //
-    function dabSubmit() {
-        $('.dabCB').each(function() {
-            var ids = this.id;
-            var bit = this.getAttribute("validBit");
-            var offset = this.getAttribute("offset");
-            //
-            // for development
-            //
-            console.assert(LOGGER, ids + ' active: ' + this.checked + ', offset: '
-            + offset + ', valid: ' + bit);
-            //
-            // update ad_fmr_config bit in question
-            //
-            updateConfigBit(offset, bit, CLEAR_BIT);
-            if (this.checked) {
-                updateConfigBit(offset, bit, SET_BIT);
-            }
-        });
-        $('#dabSubmit').fadeTo("slow", 0.5);
-    }
-    function createCheckBox(active, ensembleNumber, stationNumber, srcIndex, validBit) {
-        var dabID = ' ';
-        var str = ' ';
-        //
-        // assemble our input checkbox DOM element
-        //
-        dabID = 'Ensemble'+ensembleNumber+'Station'+stationNumber;
-        if (active == DAB_ACTIVE) {
-            str += '<div> <input type="checkbox" class="dabCB" id="'+dabID+'" name="'
-                +dabID+'" offset="'+srcIndex+'" validBit="'+validBit+'"checked>';
-        }
-        else {
-            str += '<div> <input type="checkbox" class="dabCB" id="'+dabID+'" name="'
-                +dabID+'" offset="'+srcIndex+'" validBit="'+validBit+'">';
-        }
-        str += '<label for="'+dabID+'">'+'Station '+stationNumber+'</label></div>';
-        //
-        // return content string to caller
-        //
-        return str;
-    }
-    //
-    // <div id="dabSettingsContainer"> </div>
-    //
-    function parseDABsAndCreateDOMContent() {
+    function createDABContent() {
+        var i = 0;
+        var ensembleNumber = 0;
+        var dabValue = ad_fmr_config[CONFIG_DAB_CHANNELS];
+
+        dabValue = ad_fmr_config[CONFIG_DAB_CHANNELS + i];
         var dabBody='<div id="dabBody">';
-        var dabContent=' ';
-        var dabID=' ';
-        let srcIndex, dabValue, ensembleNumber, stationNumber, active;
-        //
-        // initialize srcIndex to point to the first DAB Channel
-        // and clear our ensemble and station number
-        //
-        srcIndex = CONFIG_DAB_CHANNELS;
-        ensembleNumber = 0;
-        stationNumber = 0;
-        //
-        // stay in loop below until we hit EOF or no more DAB Channels
-        //
-        while (srcIndex < ad_fmr_config[CONFIG_FILE_LENGTH]) {
-            //
-            // get current dab value
-            //
-            dabValue = ad_fmr_config[srcIndex];
-            //
-            // okay lets check out out new ensemble - here is the bit configurations:
-            // b7 = 1
-            //      b6 indicates station active
-            //      b5 - b0 is the ensemble index
-            // b7 = 0
-            //      byte will contain 1 to 3 stations that match the ensemble
-            //      the fill order is b5 down to b0 and there will be as many
-            //      of these bytes as there are stations in the ensemble
-            //      b6 = 0
-            //      For the remaining bit pairs upper bit indicates station
-            //      valid or not, lower bit indicates active or not
-            //      b5:4
-            //      b3:2
-            //      b1:0
-            //
+        var dabContent;
+        do {
             if (isBitSet(dabValue, 7)) {
-                //
-                // we have a new ensemble
-                //
-                ensembleNumber++;
-                stationNumber = 1;
-                active = isBitSet(dabValue, 6) ? DAB_ACTIVE : DAB_NOT_ACTIVE;
-                //
-                // for development - set LOGGER to false
-                //
-                console.assert(LOGGER, dabValue + ': ensembleNumber '
-                     + ' station 1 ' + 'is ' + active);
-                //
-                // close previous ensemble and create dom content for new ensemble
-                //
-                dabContent += '</div>';
-                if (ensembleNumber%2!=0)
-                    dabContent+='<div class="column1of2">';
-                else
-                    dabContent+='<div class="column2of2">';
-                dabContent += '<h3 id="settingsTitle">' + 'Ensemble ' + ensembleNumber + '</h3>';
-                //
-                // set unique ID for station checkbox & label and append content
-                //
-                dabContent += createCheckBox(active, ensembleNumber, stationNumber, srcIndex, 6);
-                //
-                // ensure that we do exceed the ensemble maximum
-                //
-                if (ensembleNumber > DAB_MAXIMUM_ENSEMBLES) {
-                    alert("Maximum Ensembles exceeded!");
-                    break;
-                }
+              //
+              // bit 7 set indicates a new ensemble, bump ensemble number
+              // and add header with title
+              //
+              ensembleNumber++;
+              if (ensembleNumber%2 == 0)
+                dabContent='<div class="column1of2">';
+              else
+                dabContent='<div class="column2of2">';
+console.log('ensemble: ' + ensembleNumber + ' index: ' + (dabValue&0x3F).toString(16));
+              dabContent += '<h3 id="settingsTitle">' + 'Ensemble ' + ensembleNumber + '</h3>';
+              if (isBitSet(dabValue, 6))
+                  dabContent += '<p>' + 'station 1' + ' active</p>';
+              else
+                dabContent += '<p>' + 'station 1' + ' NOT active</p>';
+
+              dabContent += '<p>' + 'station 2' + '</p>';
+              dabContent += '<p>' + 'station 3' + '</p>';
+              dabContent += '</div>';
+              dabBody += dabContent;
             }
-            //
-            // bit 7 is 0 - interrogate bit pairs
-            //
-            else {
-                //
-                // for development - set LOGGER to false
-                //
-                console.assert(LOGGER, dabValue + ': ensembleNumber '
-                    + '  stations ensue');
-                //
-                // bits 5 & 4
-                //
-                if (isBitSet(dabValue, 5)) {    // is b5:4 valid?
-                    //
-                    // b5 set VALID station, is it active?
-                    //
-                    active = isBitSet(dabValue, 4) ? DAB_ACTIVE : DAB_NOT_ACTIVE;
-                    stationNumber++;
-                    //
-                    // for development - set LOGGER to false
-                    //
-                    console.assert(LOGGER, dabValue + ': ensembleNumber '
-                        + ensembleNumber + '  station ' + stationNumber
-                        + ' is ' + active);
-                    //
-                    // add station checkbox
-                    //
-                    dabContent += createCheckBox(active, ensembleNumber, stationNumber, srcIndex, 4);
-                }
-                //
-                // bits 3 & 2
-                //
-                if (isBitSet(dabValue, 3)) {    // is b3:2 valid?
-                    //
-                    // b3 set VALID station, is it active?
-                    //
-                    active = isBitSet(dabValue, 2) ? DAB_ACTIVE : DAB_NOT_ACTIVE;
-                    stationNumber++;
-                    //
-                    // for development - set LOGGER to false
-                    //
-                    console.assert(LOGGER, dabValue + ': ensembleNumber '
-                        + ensembleNumber + '  station ' + stationNumber
-                        + ' is ' + active);
-                    //
-                    // add station checkbox
-                    //
-                    dabContent += createCheckBox(active, ensembleNumber, stationNumber, srcIndex, 2);
-                }
-                //
-                // bits 1 & 0
-                //
-                if (isBitSet(dabValue, 1)) {    // is b1:0 valid?
-                    //
-                    // b1 set VALID station, is it active?
-                    //
-                    active = isBitSet(dabValue, 0) ? DAB_ACTIVE : DAB_NOT_ACTIVE;
-                    stationNumber++;
-                    //
-                    // for development - set LOGGER to false
-                    //
-                    console.assert(LOGGER, dabValue + ': ensembleNumber '
-                        + ensembleNumber + '  station ' + stationNumber
-                        + ' is ' + active);
-                    //
-                    // add station checkbox
-                    //
-                    dabContent += createCheckBox(active, ensembleNumber, stationNumber, srcIndex, 0);
-                }
-            }
-            //
-            // process next dab value
-            //
-            srcIndex++;
-        }
-        dabContent += '</div>';
-        dabBody += dabContent;
+            i++;
+            dabValue = ad_fmr_config[CONFIG_DAB_CHANNELS + i];
+        } while (dabValue != 0);
         dabBody += '</div>';
         $('#dabSettingsContainer').html(dabBody);
-        $( "#dabSubmit" ).click(function() {
-          dabSubmit();
-        });
-        $('#dabSubmit').fadeTo("slow", 1);
+return;
+        //
+        // starting at the offset for the DAB Channels traverse
+        // through the configuration bytes looking for the ensembles
+        // and the stations
+        //
+        do {
+            dabValue = ad_fmr_config[CONFIG_DAB_CHANNELS + i];
+            if (isBitSet(dabValue, 7)) {
+              //
+              // bit 7 set indicates a new ensemble, bump ensemble number
+              // and add header with title
+              //
+              ensembleNumber++;
+              var $title = 'Ensemble ' + ensembleNumber;
+              var $ensembleClass;
+              var active;
+              //
+              // set approproate class value
+              //
+              if ((ensembleNumber % 2) == 0)
+                $ensembleClass = "column1of2";
+              else
+                $ensembleClass = "column2of2";
+              //
+              // append header elements
+              //
+console.log($('#dabSettingsContainer'));
+              $('#dabSettingsContainer').append('<p>testing</p>');
+
+              // header.appendChild(headerText);
+              // header.setAttribute('id', 'settingsTitle');
+              // div.append(header);
+              // dab.append(div);
+              active = isBitSet(dabValue, 6);
+console.log('station active ' + active);
+              //
+              // determine the number of stations for each ensemble
+              //
+              dabValue = ad_fmr_config[CONFIG_DAB_CHANNELS + i];
+console.log('ensemble: ' + ensembleNumber + ' index: ' + (dabValue&0x3F).toString(16));
+            }
+            i++;
+        } while (dabValue != 0);
     }
-    function createConfigTable() {
-        var table_body = '<table border="1">';
-        var cfgIndex, cfgByte;
-        $('#configTableContainer').html(" ");
-        //
-        // create header
-        //
-        var number_of_rows = Math.ceil(ad_fmr_config[CONFIG_FILE_LENGTH]/10);
-        var number_of_cols = 10;
-        table_body +='<thead>';
-        table_body +='<tr>';
-        for(var th=0; th<number_of_cols; th++){
-            table_body +='<td>';
-            table_body += th;
-            table_body += '</td>';
+//     function createDABContent() {
+//         var i = 0;
+//         var ensembleNumber = 0;
+//         var dabValue = ad_fmr_config[CONFIG_DAB_CHANNELS];
+// console.log("createDABContent");
+//         let dab = document.createElement('div');
+//         //
+//         // starting at the offset for the DAB Channels traverse
+//         // through the configuration bytes looking for the ensembles
+//         // and the stations
+//         //
+//         do {
+//             dabValue = ad_fmr_config[CONFIG_DAB_CHANNELS + i];
+// // console.log(dabValue.toString(16));
+//             let div = document.createElement('div');
+//             if (isBitSet(dabValue, 7)) {
+//                 //
+//                 // bit 7 set indicates a new ensemble, bump ensemble number
+//                 // and add header with title
+//                 //
+//                 ensembleNumber++;
+//                 var title = 'Ensemble ' + ensembleNumber;
+//                 var header = document.createElement('h3');
+//                 var headerText = document.createTextNode(title);
+//                 var active;
+//                 //
+//                 // set approproate class value
+//                 //
+//                 if ((ensembleNumber % 2) == 0)
+//                     div.setAttribute('class', 'column1of2');
+//                 else
+//                     div.setAttribute('class', 'column2of2');
+//                 //
+//                 // append header elements
+//                 //
+//                 header.appendChild(headerText);
+//                 header.setAttribute('id', 'settingsTitle');
+//                 div.append(header);
+//                 dab.append(div);
+//                 active = isBitSet(dabValue, 6);
+// console.log('station active ' + active);
+//                 //
+//                 // determine the number of stations for each ensemble
+//                 //
+//                 dabValue = ad_fmr_config[CONFIG_DAB_CHANNELS + i];
+// console.log('ensemble: ' + ensembleNumber + ' index: ' + (dabValue&0x3F).toString(16));
+//                 // if (ensembleNumber > 1)
+//
+//             }
+//             //
+//             //
+//             i++;
+//         } while (dabValue != 0);
+//
+//         return dab;
+//     }
+    //
+    // Defining the createTable function
+    //
+    function createTable(rows, cols, data, thead, tfoot) {
+        // 1) Create table and body elements
+
+        let table = document.createElement('table');
+        table.setAttribute('id', 'config_table');
+        // let table = $('#configTableContainer');
+        let tableBody = document.createElement('tbody');
+
+console.log("setting table innerHTML");
+table.innerHTML="";
+        // 2) Optional header
+        let headContent = document.createElement('thead');
+        let tr = document.createElement('tr');
+
+        // 2.1) Sets default behavior: Single cell header
+        if (thead && Array.isArray(thead) == false) {
+            let td = document.createElement('td');
+            td.innerHTML = thead; // Set header text to argument input
+            td.setAttribute('colspan', cols); // Span header for as many cols as table
+            tr.append(td);
+            headContent.append(tr); // append head row to thead element
+            thead = headContent; // Make this final value of thead
         }
-        table_body +='</tr>';
-        table_body +='</thead>';
-        for(var i=0, cfgIndex=0; i<number_of_rows;i++){
-          table_body+='<tr>';
-          for(var j=0; j<number_of_cols; j++ ) {
-              table_body +='<td title="' + cellToolTips[cfgIndex] + '">';
-              cfgByte = ad_fmr_config[cfgIndex];
-              if (typeof cfgByte === 'undefined') {
-                  table_body += 'EOF';
-              } else {
-                  table_body += (cfgByte.toString(16).padStart(2, '0'));
-              }
-              table_body +='</td>';
-              cfgIndex++;
-          }
-          table_body+='</tr>';
+        // 2.2) If "split" is third argument: Creates a multi-cell header
+        if (Array.isArray(thead)) {
+            let i;
+            for (i = 0; i < cols; i++) {
+                let td = document.createElement('td');
+                td.id = 'thead' + i;
+                td.innerHTML = thead[i];
+                tr.append(td); // append multiple td to head row
+            }
+            headContent.append(tr); // append head row to thead element
+            thead = headContent; // Make this final value of thead
         }
-        table_body+='</table>';
-        $('#configTableContainer').html(table_body);
+        // 3) Optional footer (text is user input string)
+        if (tfoot) {
+            footElement = document.createElement('tfoot');
+            tr = document.createElement('tr');
+            td = document.createElement('td');
+            td.innerHTML = tfoot; // Set text to fourth argument input
+            td.setAttribute('colspan', cols);
+            tr.append(td) // Append single cell to row
+            footElement.append(tr); // Append row to tfoot element
+            tfoot = footElement; // Make this final value of tfoot
+        }
+        // 4) Create table body rows and cell with loops
+        let i;
+        // var result, n, aByte, byteStr;
+        for (i = 0; i < rows; i++) {
+            //
+            // Loop to create row
+            //
+            let tr = document.createElement('tr');
+            let id = i * cols;
+            //
+            // Nested loop to append cells to rows (first loop id = 0*5;
+            // second loop id = 1*5, etc)
+            //
+            for (j = 0; j < cols; j++) {
+                let td = document.createElement('td');
+                id++ // increase id by 1 (first loop is 0+1 = 1)
+                if (id == i * cols + 1) {
+                    td.classList.add('left-col');
+                 }
+                 //
+                 // print id in col cell & set id of element to id
+                 //
+                 td.innerHTML = id;
+                 td.setAttribute('id', 'cell' + id);
+                 //
+                 // set the tooltip and append the col cell to the table row
+                 //
+                 td.setAttribute('title', cellToolTips[id-1]);
+                 tr.append(td);
+                 // Repeats until j < column numbers entered by user
+
+                 if (data) {
+                     var byteStr;
+                     byteStr = data[id - 1].toString(16);
+                     if (byteStr.length < 2) {
+                          byteStr = "0" + byteStr;
+                     }
+                     td.innerHTML = byteStr;
+                 }
+             }
+             tableBody.append(tr);
+        }
+
+        // 5) Append head, body and footer
+        if (thead) {
+            table.append(thead);
+        }
+        table.append(tableBody);
+        if (tfoot) {
+            table.append(tfoot);
+        }
+        // console.log(table);
+        return table;
     }
     updateUIElements();
     //
@@ -1181,12 +1137,6 @@ $(function() {
     $( "#tabs" ).tabs({ active: 0 }); // Make Setup tab active
     // $( "#tabs" ).tabs({ active: 1 }); // Make Basic Settings tab active for development
     $( "#tabs" ).tabs('refresh');
-    $( "#tabs-4" ).tabs({
-      hide: { effect: "explode", duration: 1000 }
-    });
-    $( "#tabs-4" ).tabs({
-      show: { effect: "blind", duration: 800 }
-    });
 
     $('#tabs').tabs({
         activate: function (event, ui) {
@@ -1197,13 +1147,17 @@ $(function() {
                 $('li#saveConfigFile').fadeTo("slow", 1);
             } else if ($activeTab == TAB_DAB_SETTINGS) {
                 document.querySelector('#dabSettingsContainer').innerHTML = '';
-                parseDABsAndCreateDOMContent();
+                createDABContent();
+                // document.querySelector('#dabSettingsContainer').appendChild(dabContent);
             }
             else if ($activeTab == TAB_CONFIG_DATA) {
+                const headings = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
                 //
-                // create and populate config table
+                // clear table first and then create and populate it
                 //
-                createConfigTable();
+                document.querySelector('#configTableContainer').innerHTML = '';
+                var cfgTable = createTable(10, 10, ad_fmr_config, headings, 'Aurora Design Kicks ASS!');
+                document.querySelector('#configTableContainer').appendChild(cfgTable);
             }
         }
     });

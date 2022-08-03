@@ -2,12 +2,9 @@
 <html>
     <head>
         <title>Radio Head</title>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-        <!-- <script src="jquery-3.6.0.min.js"></script> -->
-        <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
-        <!-- <link rel="stylesheet" href="jquery-ui.css"> -->
-        <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
-        <!-- <script src="jquery-ui.min.js"></script> -->
+        <script src="jquery-3.6.0.min.js"></script>
+        <link rel="stylesheet" href="jquery-ui.css">
+        <script src="jquery-ui.min.js"></script>
         <link rel="stylesheet" href="style.css">
         <script src="radioHead.js"></script>
     </head>
@@ -22,13 +19,11 @@
                 <li><a href="#tabs-4">AD_FMR_Config</a></li>
                 </ul>
                 <div id="tabs-1">
-                    <h1 id="tabTitle">Setup</h1>
-                    <div class="column1of2">
-                        <h3 id="settingsTitle">Configuration</h3>
-                        
-                        <input type="file" id="read-file" accept=".cfg">
-
-                        <li id="selectConfigFile">Choose Configuration File</li>
+                    <h1 id="tabTitle">Configuration</h1>
+                    <div class="columnCfg">
+                        <input type="file" id="read-file" name="read-file" accept=".cfg">
+                        <br>
+                        <br>
                         <li id="setDefaults">Set Factory Defaults</li>
                         <li id="saveConfigFile">Save Configuration to File</li>
                     </div>
@@ -101,7 +96,8 @@
                           <input type="radio" name="eq" id="eq-EQ" checked="checked">
                         </fieldset>
                     </div>
-                    <div class="column1of2" style="clear: left;">
+                    <!-- <div class="column1of2" style="clear: left;"> -->
+                    <div class="column1of2">
                         <h3 id="settingsTitle">Balance/Fader/Tone</h3>
                         <div>
                             <label for="balance">Balance:</label>
@@ -157,10 +153,11 @@
                 </div>
                 <div id="tabs-3">
                     <h1 id="tabTitle">DAB Stations</h1>
-                    <h3 id="settingsTitle">DAB Stations</h3>
+                    <div class="column1" id="dabSubmit">Submit</div>
+                    <div id="dabSettingsContainer"> </div>
                 </div>
                 <div id="tabs-4">
-                    <h3 id="settingsTitle">config data</h3>
+                    <h3 id="settingsTitle">Configuration Data</h3>
                     <div id="configTableContainer"> </div>
                 </div>
             </div>
